@@ -24,8 +24,8 @@ void usage() {
 int send_msg(int cd, char* buff, int maxlen)
 {
         fgets(buff, maxlen, stdin);
-	send(cd, buff, maxlen, 0);
 	int len = strlen(buff) - 1;
+	send(cd, buff, len, 0);
         return strncmp("QUIT", buff, (len > 4? len: 4));
 }
 
