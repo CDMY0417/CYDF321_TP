@@ -24,11 +24,11 @@ pthread_t tid[MAXCLIENT];
 pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
 
 
-typedef struct thread_param
+typedef struct thread_arg
 {
 	int idx;
 	struct sockaddr_in client_addr;
-}TP;
+}thread_arg;
 
 void usage() {
 	printf("syntax : ./server <port number>\n");
@@ -56,7 +56,7 @@ void thread_func(void* arg)
 {
 	char nickname[MAXLEN] = {0};
 	char buff[MAXLEN] = {0};
-	TP p = *(TP*) arg;
+	thread_arg p = *(thread_arg*) arg;
 	printf("Connection from %s:%d\n", inet_ntoa(p.client_addr.sin_addr), ntohs(p.client_addr.sin_port));
 	recv(sdarr[p.idx], nickname, MAXLEN, 0);
 	snprintf(buff, MAXLEN, "%s is connected", nickname);
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 	len = sizeof(client_addr);
 
 	//accept and broadcast
-	TP tp = {0};
+	thread_arg ta = {0};
 	while (1) {
 		pthread_mutex_lock(&mut);
 		if (client_num >= MAXCLIENT) {
@@ -139,13 +139,13 @@ int main(int argc, char* argv[])
 		for(i = 0; i < MAXCLIENT; i++)
 		{
 			if(sdarr[i] == -1){
-				tp.idx = i;
+				ta.idx = i;
 				sdarr[i] = cd;
 				break;
 			}
 		}
 		pthread_mutex_unlock(&mut);
-		tp.client_addr = client_addr;
-		pthread_create(tid + tp.idx, NULL, (void*(*)(void*))thread_func, (void*)&tp);
+		ta.client_addr = client_addr;
+		pthread_create(tid + ta.idx, NULL, (void*(*)(void*))thread_func, (void*)&ta);
 	}
 }

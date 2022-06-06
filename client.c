@@ -74,10 +74,8 @@ int main(int argc, char* argv[])
 	pthread_t tid;
 	pthread_create(&tid, NULL, (void*(*)(void*))thread_func, NULL);
 	send(sd, nickname, strlen(nickname), 0);
-	int flag = 0;
 	while (1) {
-		flag = send_msg(sd, buff, sizeof(buff));
-		if(flag == 0) {
+		if(send_msg(sd, buff, sizeof(buff)) == 0) {
 			printf("%s is disconnected\n", nickname);
 			break;
 		}
