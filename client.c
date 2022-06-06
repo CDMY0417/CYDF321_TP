@@ -6,7 +6,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <signal.h>
 #define MAXLEN 100
 #define FAIL -1
 #define SUCCESS 0

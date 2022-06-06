@@ -7,7 +7,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include <signal.h>
 #define MAXLEN 100
 #define QUEUELIMIT 5
 #define MAXCLIENT 5
@@ -23,8 +22,7 @@ struct sockaddr_in server_addr, client_addr;
 pthread_t tid[MAXCLIENT];
 pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
 
-
-typedef struct thread_arg
+typedef struct _thread_arg
 {
 	int idx;
 	struct sockaddr_in client_addr;
@@ -56,31 +54,31 @@ void thread_func(void* arg)
 {
 	char nickname[MAXLEN] = {0};
 	char buff[MAXLEN] = {0};
-	thread_arg p = *(thread_arg*) arg;
-	printf("Connection from %s:%d\n", inet_ntoa(p.client_addr.sin_addr), ntohs(p.client_addr.sin_port));
-	recv(sdarr[p.idx], nickname, MAXLEN, 0);
+	thread_arg ta = *(thread_arg*) arg;
+	printf("Connection from %s:%d\n", inet_ntoa(ta.client_addr.sin_addr), ntohs(ta.client_addr.sin_port));
+	recv(sdarr[ta.idx], nickname, MAXLEN, 0);
 	snprintf(buff, MAXLEN, "%s is connected", nickname);
-	broadcast(p.idx, buff, strlen(buff));
+	broadcast(ta.idx, buff, strlen(buff));
 	puts(buff);
 
-	int flag = 0;
+	int res;
 	while (1) {
 		memset(buff, 0, MAXLEN);
-		flag = recv_msg(sdarr[p.idx], buff, MAXLEN);
-		if(flag == 0) snprintf(buff, MAXLEN, "%s is disconnected", nickname);
+		res = recv_msg(sdarr[ta.idx], buff, MAXLEN);
+		if(res == 0) snprintf(buff, MAXLEN, "%s is disconnected", nickname);
 		else
 		{
 			char* tmp = strdup(buff);
 			snprintf(buff, MAXLEN, "%s: %s", nickname, tmp);
 			free(tmp);
 		}
-		broadcast(p.idx, buff, strlen(buff));
+		broadcast(ta.idx, buff, strlen(buff));
 		puts(buff);
-		if(flag == 0) {
+		if(res == 0) {
 			pthread_mutex_lock(&mut);
-			close(sdarr[p.idx]);
+			close(sdarr[ta.idx]);
 			client_num--;
-			sdarr[p.idx] = -1;
+			sdarr[ta.idx] = -1;
 			pthread_mutex_unlock(&mut);
 			break;
 		}
@@ -121,7 +119,7 @@ int main(int argc, char* argv[])
 	len = sizeof(client_addr);
 
 	//accept and broadcast
-	thread_arg ta = {0};
+	thread_arg ta;
 	while (1) {
 		pthread_mutex_lock(&mut);
 		if (client_num >= MAXCLIENT) {
