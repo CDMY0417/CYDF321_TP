@@ -21,6 +21,7 @@ void usage() {
 	printf("sample : ./client 127.0.0.1 8080 User1\n");
 }
 
+//send and termination with "QUIT"
 int send_msg(int cd, char* buff, int maxlen)
 {
         fgets(buff, maxlen, stdin);
@@ -29,13 +30,13 @@ int send_msg(int cd, char* buff, int maxlen)
         return strncmp("QUIT", buff, (len > 4? len: 4));
 }
 
-
+//thread function
 void thread_func(void* arg)
 {
-	char buff[MAXLEN] = {0};
+	char buff[MAXLEN];
 	while (1) {
 		if (recv(sd, buff, sizeof(buff), 0) < 0) continue;
-		if(*buff != 0) puts(buff);
+		if (*buff != 0) puts(buff);
 		memset(buff, 0, MAXLEN);
 	}
 }
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
 		return FAIL;
 	}
 
-	//assign IP and PORT
+	//assign IP and PORT, set nickname
 	char* ip = argv[1];
 	uint16_t port = atoi(argv[2]);
 	char* nickname = argv[3];
@@ -70,12 +71,12 @@ int main(int argc, char* argv[])
 
 	printf("%s is connected\n", nickname);
 
-	//chat
+	//send message
 	pthread_t tid;
 	pthread_create(&tid, NULL, (void*(*)(void*))thread_func, NULL);
-	send(sd, nickname, strlen(nickname), 0);
+	send(sd, nickname, sizeof(nickname), 0);
 	while (1) {
-		if(send_msg(sd, buff, sizeof(buff)) == 0) {
+		if(send_msg(sd, buff, sizeof(buff)) == 0) { //input buffer is "QUIT"
 			printf("%s is disconnected\n", nickname);
 			break;
 		}

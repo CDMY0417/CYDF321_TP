@@ -22,17 +22,19 @@ struct sockaddr_in server_addr, client_addr;
 pthread_t tid[MAXCLIENT];
 pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
 
+void usage() {
+        printf("syntax : ./server <port number>\n");
+        printf("sample : ./server 8080\n");
+}
+
+//set thread arguments in struct
 typedef struct _thread_arg
 {
 	int idx;
 	struct sockaddr_in client_addr;
 }thread_arg;
 
-void usage() {
-	printf("syntax : ./server <port number>\n");
-	printf("sample : ./server 8080\n");
-}
-
+//broadcast message to other clients
 void broadcast(int idx, char* str, int len)
 {
 	pthread_mutex_lock(&mut);
@@ -43,6 +45,7 @@ void broadcast(int idx, char* str, int len)
 	pthread_mutex_unlock(&mut);
 }
 
+//recv and termination with "QUIT"
 int recv_msg(int cd, char* buff, int maxlen)
 {
         recv(cd, buff, maxlen, 0);
@@ -50,6 +53,7 @@ int recv_msg(int cd, char* buff, int maxlen)
         return strncmp("QUIT", buff, (len > 4? len: 4));
 }
 
+//thread function
 void thread_func(void* arg)
 {
 	char nickname[MAXLEN] = {0};
@@ -64,14 +68,14 @@ void thread_func(void* arg)
 	int res;
 	while (1) {
 		memset(buff, 0, MAXLEN);
-		res = recv_msg(sdarr[ta.idx], buff, MAXLEN);
+		res = recv_msg(sdarr[ta.idx], buff, MAXLEN); //client's input buffer is "QUIT"
 		if(res == 0) snprintf(buff, MAXLEN, "%s is disconnected", nickname);
 		else
 		{
 			char* tmp = strdup(buff);
 			snprintf(buff, MAXLEN, "%s: %s", nickname, tmp);
 		}
-		broadcast(ta.idx, buff, strlen(buff));
+		broadcast(ta.idx, buff, sizeof(buff));
 		puts(buff);
 		if(res == 0) {
 			pthread_mutex_lock(&mut);
