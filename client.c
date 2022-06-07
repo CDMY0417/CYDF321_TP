@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 #define MAXLEN 100
 #define FAIL -1
 #define SUCCESS 0
@@ -80,7 +81,7 @@ int main(int argc, char* argv[])
 		}
 		memset(buff, 0, MAXLEN);
 	}
-	pthread_cancel(tid);
+	pthread_detach(tid);
 
 	//close socket
 	close(sd);

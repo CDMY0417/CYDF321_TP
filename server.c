@@ -54,7 +54,7 @@ void thread_func(void* arg)
 {
 	char nickname[MAXLEN] = {0};
 	char buff[MAXLEN] = {0};
-	thread_arg ta = *(thread_arg*) arg;
+	thread_arg ta = *(thread_arg*)arg;
 	printf("Connection from %s:%d\n", inet_ntoa(ta.client_addr.sin_addr), ntohs(ta.client_addr.sin_port));
 	recv(sdarr[ta.idx], nickname, MAXLEN, 0);
 	snprintf(buff, MAXLEN, "%s is connected", nickname);
@@ -70,7 +70,6 @@ void thread_func(void* arg)
 		{
 			char* tmp = strdup(buff);
 			snprintf(buff, MAXLEN, "%s: %s", nickname, tmp);
-			free(tmp);
 		}
 		broadcast(ta.idx, buff, strlen(buff));
 		puts(buff);
